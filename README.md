@@ -46,6 +46,18 @@ These commands were taken from the [InfluxDB Essentials](https://university.infl
 
 
 
+EX: `thermostat, location=downstairs temp=45,humidity=60 1698348912334`
+
+- A Point is a unique data record in InfluxDB
+- Each point has multiple fields
+- Points are defined by the measurement, tag set and timestamp
+  - Not fields!
+- Duplicate fields for the same Point definition will overwrite each other
+
+
+
+
+
 ### Implicit Schemas
 
 - You don't have to define your columns and types ahead of time
@@ -68,7 +80,44 @@ These commands were taken from the [InfluxDB Essentials](https://university.infl
 
 
 
+### Line Protocol Format
 
+`measurement[, tag_name=tag_value] field1=value1[, field2=value2] [timestamp]`
+
+- Examples:
+  - `counter count=16 1698348912334` (counter = measurement, count = field, and the last timestamp)
+  - `website, host=mywesite.com CPUUser=4.2` (website = measurement, host = tag, CPUUser = field)
+  - `thermostat, location=downstairs temp=45,humidity=60 1698348912334` (thermostat = measurement, location = tag, temp and humidity = fields, and the last timestamp)
+
+
+
+### Fields
+
+- At least one field=value pair is required
+- Not all fields must be present in each line
+- Strings enclosed in double-quotes: `field="string value"`
+  - 64KB limit
+- Numeric values default to float types
+  - Append `i` to specify integers: `field=45i`
+- Booleans can be:
+  - t, T, true, True or TRUE
+  - f, F, false, False or FALSE
+
+
+
+### Timestamp
+
+- Timestamps are optional
+
+  - InfluxDB will identical Point definitions, causing unwanted data overwriting
+
+- Defaults to nanosecond precision
+
+  - Can be changed when making a write API call
+
+  
+
+## Commands
 
 
 
@@ -100,7 +149,7 @@ These commands were taken from the [InfluxDB Essentials](https://university.infl
 
 ## Writing Data
 
-How to write data by terminal.
+How you write data by terminal.
 
 - Create a bucket
   - `influx bucket create -n "bucket_name"`
@@ -112,6 +161,15 @@ How to write data by terminal.
 - Formats
   - Defaults to InfluxDB Line Protocol
   - CSV: `influx write --bucket "bucket_name" --file file_name --format csv`
+
+
+
+How write data by API
+
+- With CURL
+  - curl --request POST "http://localhost:8086/api/v2/write?org=**org+name**&bucket=**bucket_name**" --header "Authorization: Token **your_token**" --data-binary **'mydata,mytag=foo myfield=1'**
+  - With precision changed to seconds:
+    - curl --request POST "http://localhost:8086/api/v2/write?**precision=s**&org=**org+name**&bucket=**bucket_name**" --header "Authorization: Token **your_token**" --data-binary **'mydata,mytag=foo myfield=1'**
 
 
 
@@ -138,7 +196,7 @@ How to write data by terminal.
   - `influx secret list`
 
 - Add or update  a secret
-  - influx secret update --key "key_name" --value "value"
+  - `influx secret update --key "key_name" --value "value"`
 
 
 
